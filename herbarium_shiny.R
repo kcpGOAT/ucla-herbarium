@@ -44,18 +44,19 @@ ui <- fluidPage(
                              min = -100, max = 7500, value = c(100, 2000), sep = ""),
                  pickerInput("family", "Family", choices = sort(unique(herb_df$family)),
                              options = pickerOptions(liveSearch = TRUE)),
-                 pickerInput("genus", "Genus", choices = sort(unique(herb_df$genus))),
-                 textInput("species", "Species", value = "")),
+                 # pickerInput("genus", "Genus", choices = sort(unique(herb_df$genus))),
+                 # textInput("species", "Species", value = "")
+                 ),
     mainPanel(plotOutput("map_plot"))
   )
 )
 
 server <- function(input, output, session) {
-  observe({
-    new_genus <- herb_df$genus[herb_df$family %in% input$family]
-    updatePickerInput(session = session, inputId = "genus", 
-                      choices = sort(unique(new_genus)))
-  })
+  # observe({
+  #   new_genus <- herb_df$genus[herb_df$family %in% input$family]
+  #   updatePickerInput(session = session, inputId = "genus", 
+  #                     choices = sort(unique(new_genus)))
+  # })
   
   world <- st_as_sf(maps::map("world", plot = FALSE, fill = TRUE), crs = 4326)
   states <- st_as_sf(maps::map("state", plot = FALSE, fill = TRUE), crs = 4326)
@@ -63,8 +64,9 @@ server <- function(input, output, session) {
                                           # grepl(paste(input$habitat, collapse = "|"), herb_df$habitat_type) &
                                           herb_df$year %in% input$year_range[1]:input$year_range[2] &
                                           herb_df$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
-                                          herb_df$family %in% input$family &
-                                          herb_df$genus %in% input$genus, ], 
+                                          herb_df$family %in% input$family # &
+                                          # herb_df$genus %in% input$genus
+                                        , ], 
                                 coords = c("longitude", "latitude"), crs = 4326)})
   
   output$map_plot <- renderPlot({

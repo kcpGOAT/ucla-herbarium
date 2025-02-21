@@ -28,7 +28,7 @@ ui <- fluidPage(
                  sliderInput("elevation_range", "Elevation range", 
                              min = -100, max = 7500, value = c(100, 2000), sep = ""),
                  pickerInput("family", "Family", choices = sort(unique(herb_df$family)),
-                             options = pickerOptions(liveSearch = TRUE)),
+                             multiple = TRUE, options = pickerOptions(liveSearch = TRUE)),
     ),
     mainPanel(plotOutput("map_plot"))
   )

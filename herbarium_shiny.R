@@ -38,9 +38,9 @@ server <- function(input, output, session) {
   world <- st_as_sf(maps::map("world", plot = FALSE, fill = TRUE), crs = 4326)
   states <- st_as_sf(maps::map("state", plot = FALSE, fill = TRUE), crs = 4326)
   herb_sf <- reactive({st_as_sf(herb_df[herb_df$season %in% input$season &
-                                          herb_df$year %in% input$year_range[1]:input$year_range[2] &
-                                          herb_df$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
-                                          herb_df$family %in% input$family, ], 
+                                        herb_df$year %in% input$year_range[1]:input$year_range[2] &
+                                        herb_df$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
+                                        herb_df$family %in% input$family, ], 
                                 coords = c("longitude", "latitude"), crs = 4326)})
   
   output$map_plot <- renderPlot({

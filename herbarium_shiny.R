@@ -18,7 +18,8 @@ herb_df <- herbarium_data %>%
                             month %in% 3:5 ~ "spring",
                             month %in% 6:8 ~ "summer",
                             month %in% 9:11 ~ "fall")) %>%
-  filter(!is.na(season), !is.na(longitude), !is.na(latitude), !is.na(entered_by))
+  filter(!is.na(season), !is.na(longitude), !is.na(latitude), 
+         !is.na(entered_by), str_detect(family, "[:alpha:]"))
 
 ui <- fluidPage(
   titlePanel("The Distribution of UCLA's Botanical Specimen Findings"),
@@ -46,7 +47,7 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  world <- st_as_sf(maps::map("world", plot = FALSE, fill = TRUE), crs = 4326)
+  world <- st_as_sf(maps::map("world", plot = FALSE, fill = TRUE, ylim = c(-180, 20)), crs = 4326)
   states <- st_as_sf(maps::map("state", plot = FALSE, fill = TRUE), crs = 4326)
   counties <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE))
   CA_counties <- subset(counties, grepl("california", counties$ID))

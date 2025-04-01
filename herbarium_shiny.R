@@ -48,10 +48,11 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   world <- st_as_sf(maps::map("world", plot = FALSE, fill = TRUE), crs = 4326)
   states <- st_as_sf(maps::map("state", plot = FALSE, fill = TRUE), crs = 4326)
-  CA_counties <- subset(map_data("county"), region == "california")
+  counties <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE))
+  CA_counties <- subset(counties, grepl("california", counties$ID))
   
   observeEvent(input$show_fam, {
-    updatePickerInput(session, "family", selected = unique(sort(herb_df$famil)))
+    updatePickerInput(session, "family", selected = unique(sort(herb_df$family)))
   })
   observeEvent(input$clear_fam, {
     updatePickerInput(session, "family", selected = character(0))
@@ -69,7 +70,7 @@ server <- function(input, output, session) {
     ggplot() +
       geom_sf(data = world) +
       geom_sf(data = states) +
-      geom_polygon(data = CA_counties) +
+      geom_sf(data = CA_counties, fill = NA) +
       geom_sf(data = herb_sf(), alpha = 0.5) +
       coord_sf(xlim = map_ranges$x, map_ranges$y, expand = FALSE)
   }, width = 800, height = 800)
@@ -86,7 +87,5 @@ server <- function(input, output, session) {
     }
   })
 }
-
-shinyApp(ui, server)
 
 shinyApp(ui, server)

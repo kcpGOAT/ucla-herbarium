@@ -67,7 +67,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$show_ppl, {
-    updatePickerInput(session, "surname", selected = unique(sort(herb_df$family)))
+    updatePickerInput(session, "surname", selected = unique(sort(herb_df$surname)))
   })
   observeEvent(input$clear_ppl, {
     updatePickerInput(session, "surname", selected = character(0))

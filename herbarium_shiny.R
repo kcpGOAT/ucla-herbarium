@@ -51,7 +51,7 @@ ui <- fluidPage(
                          dblclick = "plot1_dblclick",
                          brush = brushOpts(id = "plot1_brush",
                                            resetOnNew = TRUE),
-                         hover = "plot_hover"))
+                         click = "plot_click"))
   )
 )
 
@@ -100,9 +100,9 @@ server <- function(input, output, session) {
   }, width = 800, height = 800)
   
   output$info <- renderPrint({
-    if (is.null(input$plot_hover)) return("Hover over a point to show its species name!")
+    if (is.null(input$plot_click)) return("Click on a point to show its species name!")
     paste0("Species name: ", 
-           nearPoints(new_herb_df(), input$plot_hover, xvar = "longitude", yvar = "latitude")$scientificName)
+           nearPoints(new_herb_df(), input$plot_click, xvar = "longitude", yvar = "latitude")$scientificName)
   })
   
   observeEvent(input$plot1_dblclick, {

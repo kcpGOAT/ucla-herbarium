@@ -6,7 +6,7 @@ library(tidyverse)
 herbarium_data <- data.table::fread("findings-df.csv")
 
 herb_df <- herbarium_data %>%
-  select(family, genus, specificEpithet, recordedBy, 
+  select(family, genus, specificEpithet, scientificName, recordedBy, 
          minimumElevationInMeters, year, month, habitat,
          decimalLatitude, decimalLongitude, recordEnteredBy) %>%
   rename(elevation = minimumElevationInMeters,
@@ -42,14 +42,16 @@ ui <- fluidPage(
                              options = pickerOptions(liveSearch = TRUE)),
                  pickerInput("surname", "Last name of collector", choices = sort(unique(herb_df$surname)),
                              selected = sort(unique(herb_df$surname)), multiple = TRUE,
-                             options = pickerOptions(liveSearch = TRUE))
+                             options = pickerOptions(liveSearch = TRUE)),
+                 verbatimTextOutput("info")
     ),
     mainPanel(h4("To zoom in, click and drag cursor to create box, then double-click"),
               h4("To zoom out, double-click map"),
               plotOutput("map_plot",
                          dblclick = "plot1_dblclick",
                          brush = brushOpts(id = "plot1_brush",
-                                           resetOnNew = TRUE)))
+                                           resetOnNew = TRUE),
+                         hover = "plot_hover"))
   )
 )
 
@@ -90,6 +92,10 @@ server <- function(input, output, session) {
       geom_sf(data = herb_sf(), alpha = 0.5) +
       coord_sf(xlim = map_ranges$x, map_ranges$y, expand = FALSE)
   }, width = 800, height = 800)
+  
+  output$info <- renderPrint({
+    nearPoints(herb_df, input$plot_hover, xvar = "longitude", yvar = "latitude")$scientificName
+  })
   
   observeEvent(input$plot1_dblclick, {
     brush <- input$plot1_brush

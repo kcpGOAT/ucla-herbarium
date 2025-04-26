@@ -77,23 +77,17 @@ server <- function(input, output, session) {
   
   map_ranges <- reactiveValues(x = c(-125, -113.5), y = c(30, 42.5))
   
-  observeEvent(input$plot1_dblclick, {
-    brush <- input$plot1_brush
-    if (!is.null(brush)) {
-      map_ranges$x <- c(brush$xmin, brush$xmax)
-      map_ranges$y <- c(brush$ymin, brush$ymax)
-      
-    } else {
-      map_ranges$x <- c(-125, -113.5)
-      map_ranges$y <- c(30, 42.5)
-    }
-  })
+  new_herb_df <- reactive({herb_df[herb_df$season %in% input$season &
+                                   herb_df$year %in% input$year_range[1]:input$year_range[2] &
+                                   herb_df$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
+                                   herb_df$surname %in% input$surname &
+                                   herb_df$family %in% input$family, ]})
   
   herb_sf <- reactive({st_as_sf(herb_df[herb_df$season %in% input$season &
                                         herb_df$year %in% input$year_range[1]:input$year_range[2] &
                                         herb_df$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
                                         herb_df$surname %in% input$surname &
-                                        herb_df$family %in% input$family, ], 
+                                        herb_df$family %in% input$family, ],
                                 coords = c("longitude", "latitude"), crs = 4326)})
   
   output$map_plot <- renderPlot({
@@ -108,7 +102,19 @@ server <- function(input, output, session) {
   output$info <- renderPrint({
     if (is.null(input$plot_hover)) return("Hover over a point to show its species name!")
     paste0("Species name: ", 
-           nearPoints(herb_df, input$plot_hover, xvar = "longitude", yvar = "latitude")$scientificName)
+           nearPoints(new_herb_df(), input$plot_hover, xvar = "longitude", yvar = "latitude")$scientificName)
+  })
+  
+  observeEvent(input$plot1_dblclick, {
+    brush <- input$plot1_brush
+    if (!is.null(brush)) {
+      map_ranges$x <- c(brush$xmin, brush$xmax)
+      map_ranges$y <- c(brush$ymin, brush$ymax)
+      
+    } else {
+      map_ranges$x <- c(-125, -113.5)
+      map_ranges$y <- c(30, 42.5)
+    }
   })
 }
 

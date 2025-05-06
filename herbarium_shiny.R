@@ -3,30 +3,11 @@ library(shiny)
 library(shinyWidgets)
 library(tidyverse)
 
-herbarium_data <- data.table::fread("findings-df.csv")
-
-herb_df <- herbarium_data %>%
-  select(family, genus, specificEpithet, scientificName, recordedBy, 
-         minimumElevationInMeters, year, month, habitat,
-         decimalLatitude, decimalLongitude, recordEnteredBy) %>%
-  rename(elevation = minimumElevationInMeters,
-         species = specificEpithet,
-         latitude = decimalLatitude,
-         longitude = decimalLongitude,
-         entered_by = recordEnteredBy) %>%
-  mutate(season = case_when(month %in% c(1:2, 12) ~ "Winter (December, January, February)",
-                            month %in% 3:5 ~ "Spring (March, April, May)",
-                            month %in% 6:8 ~ "Summer (June, July, August)",
-                            month %in% 9:11 ~ "Fall (September, October, November)"),
-         surname = str_extract(recordedBy, "[:alpha:]+$")) %>%
-  filter(!is.na(season), !is.na(longitude), !is.na(latitude), 
-         !is.na(entered_by), str_detect(family, "[:alpha:]")) %>%
-  filter(!(family %in% c("CMP", "LAB")))
-
 ui <- fluidPage(
   titlePanel("The Distribution of UCLA's Botanical Specimen Findings"),
   sidebarLayout(
-    sidebarPanel(fluidRow(actionButton("show_fam", "Include all families?"),
+    sidebarPanel(fluidRow(fileInput("file_df", "Choose a CSV File", accept = ".csv")),
+                 fluidRow(actionButton("show_fam", "Include all families?"),
                           actionButton("clear_fam", "Clear all families?")),
                  fluidRow(actionButton("show_ppl", "Include all collectors?"),
                           actionButton("clear_ppl", "Clear all collectors?")),
@@ -57,20 +38,49 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  options(shiny.maxRequestSize = 100 * 1024^2)
+  
+  input_df <- reactive({
+    req(input$file_df)
+    
+    df <- data.table::fread(input$file_df$datapath)
+    return(df)
+  })
+  
+  herb_df <- reactive({
+    input_df() %>%
+      select(family, genus, specificEpithet, scientificName, recordedBy, 
+             minimumElevationInMeters, year, month, habitat,
+             decimalLatitude, decimalLongitude, recordEnteredBy) %>%
+      rename(elevation = minimumElevationInMeters,
+             species = specificEpithet,
+             latitude = decimalLatitude,
+             longitude = decimalLongitude,
+             entered_by = recordEnteredBy) %>%
+      mutate(season = case_when(month %in% c(1:2, 12) ~ "Winter (December, January, February)",
+                                month %in% 3:5 ~ "Spring (March, April, May)",
+                                month %in% 6:8 ~ "Summer (June, July, August)",
+                                month %in% 9:11 ~ "Fall (September, October, November)"),
+             surname = str_extract(recordedBy, "[:alpha:]+$")) %>%
+      filter(!is.na(season), !is.na(longitude), !is.na(latitude), 
+             !is.na(entered_by), str_detect(family, "[:alpha:]")) %>%
+      filter(!(family %in% c("CMP", "LAB")))
+  })
+  
   world <- st_as_sf(maps::map("world", plot = FALSE, fill = TRUE, ylim = c(-180, 20)), crs = 4326)
   states <- st_as_sf(maps::map("state", plot = FALSE, fill = TRUE), crs = 4326)
   counties <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE))
   CA_counties <- subset(counties, grepl("california", counties$ID))
   
   observeEvent(input$show_fam, {
-    updatePickerInput(session, "family", selected = unique(sort(herb_df$family)))
+    updatePickerInput(session, "family", selected = unique(sort(herb_df()$family)))
   })
   observeEvent(input$clear_fam, {
     updatePickerInput(session, "family", selected = character(0))
   })
   
   observeEvent(input$show_ppl, {
-    updatePickerInput(session, "surname", selected = unique(sort(herb_df$surname)))
+    updatePickerInput(session, "surname", selected = unique(sort(herb_df()$surname)))
   })
   observeEvent(input$clear_ppl, {
     updatePickerInput(session, "surname", selected = character(0))
@@ -78,17 +88,17 @@ server <- function(input, output, session) {
   
   map_ranges <- reactiveValues(x = c(-125, -113.5), y = c(30, 42.5))
   
-  new_herb_df <- reactive({herb_df[herb_df$season %in% input$season &
-                                   herb_df$year %in% input$year_range[1]:input$year_range[2] &
-                                   herb_df$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
-                                   herb_df$surname %in% input$surname &
-                                   herb_df$family %in% input$family, ]})
+  new_herb_df <- reactive({herb_df()[herb_df()$season %in% input$season &
+                                   herb_df()$year %in% input$year_range[1]:input$year_range[2] &
+                                   herb_df()$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
+                                   herb_df()$surname %in% input$surname &
+                                   herb_df()$family %in% input$family, ]})
   
-  herb_sf <- reactive({st_as_sf(herb_df[herb_df$season %in% input$season &
-                                        herb_df$year %in% input$year_range[1]:input$year_range[2] &
-                                        herb_df$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
-                                        herb_df$surname %in% input$surname &
-                                        herb_df$family %in% input$family, ],
+  herb_sf <- reactive({st_as_sf(herb_df()[herb_df()$season %in% input$season &
+                                        herb_df()$year %in% input$year_range[1]:input$year_range[2] &
+                                        herb_df()$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
+                                        herb_df()$surname %in% input$surname &
+                                        herb_df()$family %in% input$family, ],
                                 coords = c("longitude", "latitude"), crs = 4326)})
   
   output$map_plot <- renderPlot({

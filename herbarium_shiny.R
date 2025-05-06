@@ -43,6 +43,7 @@ ui <- fluidPage(
                  pickerInput("surname", "Last name of collector", choices = sort(unique(herb_df$surname)),
                              selected = sort(unique(herb_df$surname)), multiple = TRUE,
                              options = pickerOptions(liveSearch = TRUE)),
+                 h5("Click on a point to show its species name!"),
                  verbatimTextOutput("info")
     ),
     mainPanel(h4("To zoom in, click and drag cursor to create box, then double-click"),
@@ -100,7 +101,7 @@ server <- function(input, output, session) {
   }, width = 800, height = 800)
   
   output$info <- renderPrint({
-    if (is.null(input$plot_click)) return("Click on a point to show its species name!")
+    if (is.null(input$plot_click)) return(noquote(""))
     paste0("Species name: ", 
            nearPoints(new_herb_df(), input$plot_click, xvar = "longitude", yvar = "latitude")$scientificName)
   })

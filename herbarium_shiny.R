@@ -3,10 +3,17 @@ library(shiny)
 library(shinyWidgets)
 library(tidyverse)
 
+df_default <- data.table::fread("findings-df.csv")
+
 ui <- fluidPage(
   titlePanel("The Distribution of UCLA's Botanical Specimen Findings"),
   sidebarLayout(
-    sidebarPanel(fluidRow(fileInput("file_df", "Choose a CSV File", accept = ".csv")),
+    sidebarPanel(radioButtons("df_source", "Choose Data Source:",
+                              choices = c("Use default dataset", "Upload CSV"),
+                              selected = "Use default dataset"),
+                 conditionalPanel(
+                   condition = "input.df_source == 'Upload CSV'",
+                   fileInput("file1", "Upload CSV File", accept = ".csv")),
                  fluidRow(actionButton("show_fam", "Include all families?"),
                           actionButton("clear_fam", "Clear all families?")),
                  fluidRow(actionButton("show_ppl", "Include all collectors?"),
@@ -41,10 +48,13 @@ server <- function(input, output, session) {
   options(shiny.maxRequestSize = 100 * 1024^2)
   
   input_df <- reactive({
-    req(input$file_df)
-    
-    df <- data.table::fread(input$file_df$datapath)
-    return(df)
+    if (input$df_source == "Use default dataset") {
+      return(df_default)
+    }
+    else {
+      req(input$file_df)
+      data.table::fread(input$file_df$datapath)
+    }
   })
   
   herb_df <- reactive({
@@ -130,3 +140,4 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+

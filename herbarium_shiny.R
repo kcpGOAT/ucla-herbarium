@@ -3,6 +3,8 @@ library(shiny)
 library(shinyWidgets)
 library(tidyverse)
 
+df_default <- data.table::fread("findings-df.csv")
+
 ui <- fluidPage(
   titlePanel("The Distribution of UCLA's Botanical Specimen Findings"),
   sidebarLayout(
@@ -47,7 +49,7 @@ server <- function(input, output, session) {
   
   input_df <- reactive({
     if (input$df_source == "Use default dataset") {
-      return(data.table::fread("findings-df.csv"))
+      return(df_default)
     }
     else {
       req(input$file_df)

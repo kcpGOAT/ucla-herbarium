@@ -13,7 +13,7 @@ ui <- fluidPage(
                               selected = "Use default dataset"),
                  conditionalPanel(
                    condition = "input.df_source == 'Upload CSV'",
-                   fileInput("file1", "Upload CSV File", accept = ".csv")),
+                   fileInput("file_df", "Upload CSV File", accept = ".csv")),
                  fluidRow(actionButton("show_fam", "Include all families?"),
                           actionButton("clear_fam", "Clear all families?")),
                  fluidRow(actionButton("show_ppl", "Include all collectors?"),
@@ -53,7 +53,7 @@ server <- function(input, output, session) {
     }
     else {
       req(input$file_df)
-      data.table::fread(input$file_df$datapath)
+      return(data.table::fread(input$file_df$datapath))
     }
   })
   

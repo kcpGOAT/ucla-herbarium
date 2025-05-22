@@ -14,6 +14,8 @@ ui <- fluidPage(
                  conditionalPanel(
                    condition = "input.df_source == 'Upload CSV'",
                    fileInput("file_df", "Upload CSV File", accept = ".csv")),
+                 fluidRow(downloadButton("downloadData", "Download default CSV")),
+                 div(style = "height:10px"),
                  fluidRow(actionButton("show_fam", "Include all families?"),
                           actionButton("clear_fam", "Clear all families?")),
                  fluidRow(actionButton("show_ppl", "Include all collectors?"),
@@ -56,6 +58,13 @@ server <- function(input, output, session) {
       return(data.table::fread(input$file_df$datapath))
     }
   })
+  
+  output$downloadData <- downloadHandler(
+    filename = "herbarium_data.csv",
+    content = function(file) {
+      write.csv(df_default, file)
+    }
+  )
   
   herb_df <- reactive({
     input_df() %>%

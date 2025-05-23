@@ -26,7 +26,7 @@ ui <- fluidPage(
                  sliderInput("year_range", "Year range", min = 1800, max = 2030,
                              value = c(1900, 2000), sep = ""),
                  sliderInput("elevation_range", "Elevation range", 
-                             min = -100, max = 7500, value = c(100, 2000), sep = ""),
+                             min = -100, max = 20000, value = c(100, 7500), sep = ""),
                  pickerInput("family", "Family", choices = sort(unique(herb_df$family)),
                              selected = sort(unique(herb_df$family)), multiple = TRUE,
                              options = pickerOptions(liveSearch = TRUE)),
@@ -38,13 +38,25 @@ ui <- fluidPage(
     ),
     mainPanel(h4("To zoom in, click and drag cursor to create box, then double-click"),
               h4("To zoom out, double-click map"),
-              plotOutput("map_plot",
-                         dblclick = "plot1_dblclick",
-                         brush = brushOpts(id = "plot1_brush",
-                                           resetOnNew = TRUE),
-                         click = "plot_click"))
+              tabsetPanel(
+                id = "plots",
+                tabPanel("Main plot", 
+                         plotOutput("map_plot_main",
+                                    dblclick = "plot1_dblclick",
+                                    brush = brushOpts(id = "plot1_brush",
+                                                      resetOnNew = TRUE),
+                                    click = "plot_click")),
+                tabPanel("Contour plot",
+                         plotOutput("map_plot_contour",
+                                    dblclick = "plot1_dblclick",
+                                    brush = brushOpts(id = "plot1_brush",
+                                                      resetOnNew = TRUE),
+                                    click = "plot_click"))
+              )
+    )
   )
 )
+
 
 server <- function(input, output, session) {
   options(shiny.maxRequestSize = 100 * 1024^2)
@@ -120,13 +132,40 @@ server <- function(input, output, session) {
                                         herb_df()$family %in% input$family, ],
                                 coords = c("longitude", "latitude"), crs = 4326)})
   
-  output$map_plot <- renderPlot({
+  output$map_plot_main <- renderPlot({
     ggplot() +
       geom_sf(data = world) +
       geom_sf(data = states) +
       geom_sf(data = CA_counties, fill = NA) +
       geom_sf(data = herb_sf(), alpha = 0.5) +
       coord_sf(xlim = map_ranges$x, map_ranges$y, expand = FALSE)
+  }, width = 800, height = 800)
+  
+  output$map_plot_contour <- renderPlot({
+    ggplot() +
+      geom_sf(data = world) +
+      geom_sf(data = states) +
+      geom_sf(data = CA_counties, fill = NA) +
+      geom_sf(data = herb_sf(), alpha = 0.5) +
+      coord_sf(xlim = map_ranges$x, map_ranges$y, expand = FALSE) +
+      stat_density_2d_filled(data = new_herb_df(), 
+                             alpha = 0.5, 
+                             n = 250,
+                             contour_var = "density",
+                             aes(x = longitude, y = latitude, 
+                                 fill = as.numeric(..level..))) +
+      stat_density_2d(data = new_herb_df(), 
+                      alpha = 0.75, 
+                      n = 250,
+                      contour = TRUE,
+                      contour_var = "density",
+                      aes(x = longitude, y = latitude)) +
+      scale_fill_gradient2("Number of occurences per unit area", 
+                           low = "white", 
+                           mid = "green", 
+                           high = "darkgreen", 
+                           limits = c(0, 8),
+                           midpoint = 4)
   }, width = 800, height = 800)
   
   output$info <- renderPrint({

@@ -26,7 +26,7 @@ ui <- fluidPage(
                  sliderInput("year_range", "Year range", min = 1800, max = 2030,
                              value = c(1900, 2000), sep = ""),
                  sliderInput("elevation_range", "Elevation range", 
-                             min = -100, max = 20000, value = c(100, 7500), sep = ""),
+                             min = -100, max = 6900, value = c(-100, 1900), sep = ""),
                  pickerInput("family", "Family", choices = sort(unique(herb_df$family)),
                              selected = sort(unique(herb_df$family)), multiple = TRUE,
                              options = pickerOptions(liveSearch = TRUE)),

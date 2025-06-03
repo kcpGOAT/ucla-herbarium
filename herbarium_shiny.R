@@ -6,14 +6,14 @@ library(tidyverse)
 df_default <- data.table::fread("findings-df.csv")
 
 ui <- fluidPage(
-  titlePanel("The Distribution of UCLA's Botanical Specimen Findings"),
+  titlePanel("The Distribution of the UCLA Herbarium's Botanical Specimen Findings"),
   sidebarLayout(
     sidebarPanel(radioButtons("df_source", "Choose Data Source:",
-                              choices = c("Use default dataset", "Upload CSV"),
+                              choices = c("Use default dataset", "Upload CSV (Darwin Core Format)"),
                               selected = "Use default dataset"),
                  conditionalPanel(
-                   condition = "input.df_source == 'Upload CSV'",
-                   fileInput("file_df", "Upload CSV File", accept = ".csv")),
+                   condition = "input.df_source == 'Upload CSV (Darwin Core Format)'",
+                   fileInput("file_df", "Upload File", accept = ".csv")),
                  fluidRow(downloadButton("downloadData", "Download default CSV")),
                  div(style = "height:10px"),
                  fluidRow(actionButton("show_fam", "Include all families?"),
@@ -120,16 +120,16 @@ server <- function(input, output, session) {
   map_ranges <- reactiveValues(x = c(-125, -113.5), y = c(30, 42.5))
   
   new_herb_df <- reactive({herb_df()[herb_df()$season %in% input$season &
-                                   herb_df()$year %in% input$year_range[1]:input$year_range[2] &
-                                   herb_df()$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
-                                   herb_df()$surname %in% input$surname &
-                                   herb_df()$family %in% input$family, ]})
+                                       herb_df()$year %in% input$year_range[1]:input$year_range[2] &
+                                       herb_df()$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
+                                       herb_df()$surname %in% input$surname &
+                                       herb_df()$family %in% input$family, ]})
   
   herb_sf <- reactive({st_as_sf(herb_df()[herb_df()$season %in% input$season &
-                                        herb_df()$year %in% input$year_range[1]:input$year_range[2] &
-                                        herb_df()$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
-                                        herb_df()$surname %in% input$surname &
-                                        herb_df()$family %in% input$family, ],
+                                            herb_df()$year %in% input$year_range[1]:input$year_range[2] &
+                                            herb_df()$elevation %in% input$elevation_range[1]:input$elevation_range[2] &
+                                            herb_df()$surname %in% input$surname &
+                                            herb_df()$family %in% input$family, ],
                                 coords = c("longitude", "latitude"), crs = 4326)})
   
   output$map_plot_main <- renderPlot({
